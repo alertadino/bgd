@@ -1,7 +1,0 @@
-{
-  "name": "@ad-sdk/bgd",
-  "version": "0.0.1-alpha",
-  "main": "index.js",
-  "license": "BSD-3-Clause",
-  "repository": "https://github.com/alertadino/bgd.git"
-}

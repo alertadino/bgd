@@ -107,4 +107,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+bin/
+test.ts
 /target
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target

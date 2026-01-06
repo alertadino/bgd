@@ -1,9 +1,12 @@
 {
   "name": "@ad-sdk/bgd",
-  "version": "0.0.1-alpha",
+  "version": "0.0.1",
   "main": "dist/index.js",
   "license": "BSD-3-Clause",
-  "repository": "https://github.com/alertadino/bgd.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alertadino/bgd.git"
+  },
   "engines": {
     "node": ">=19"
   },
@@ -33,5 +36,8 @@
     "eslint": "8.57.0",
     "jest": "^30.2.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "uidlib": "^0.0.1"
   }
 }

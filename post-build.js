@@ -1,14 +1,36 @@
-/* eslint-disable */
-/* eslint-enable semi, eol-last, quote, switch-colon-spacing, no-dupe-keys, indent, comma-dangle */
 
-const path = require('node:path');
-const { existsSync } = require('node:fs');
-const { rmdir, stat, unlink, readdir, copyFile } = require('node:fs/promises');
+/**
+ * Copyright © 2025 Alerta Dino. All rights reserved.
+ * 
+ * This code was released under the BSD 3-Clause License.
+ * See the "LICENSE" file under project root.
+ * 
+ * @author (PUBLIC_ID) 1D-C2-9B-98-D6-C3-D6-AB
+ * @signphrase It was created on Earth by humans, although
+ *             I can't define what a "human" is.
+ */
+
+/* eslint-disable */
+/* eslint-enable semi, eol-last, quotes, switch-colon-spacing, no-dupe-keys, indent, comma-dangle */
+
+
+const {
+  rmdir,
+  stat,
+  unlink,
+  readdir,
+  copyFile,
+  readFile,
+  writeFile,
+} = require("node:fs/promises");
+
+const path = require("node:path");
+const { existsSync } = require("node:fs");
 
 
 const SRC_PATH = path.join(process.cwd(), process.env.SOURCE_PATH || "src");
 const DEST_PATH = path.join(process.cwd(), process.env.OUTPUT_PATH || "dist");
-const MD_PATH = path.join(process.cwd(), '..', 'README.md');
+const MD_PATH = path.join(process.cwd(), "..", "README.md");
 
 
 (async function() {
@@ -20,36 +42,54 @@ const MD_PATH = path.join(process.cwd(), '..', 'README.md');
     throw new Error("Missing source directory for node.js' files");
   }
 
-  if(process.env.NODE_ENV === 'production') {
+  if(process.env.NODE_ENV === "production") {
     try {
-      await rimraf(path.join(DEST_PATH, 'test'));
+      await rimraf(path.join(DEST_PATH, "test"));
 
       await rmfl(DEST_PATH, [
         {
-          rule: 'pattern',
+          rule: "pattern",
           value: /(.*).spec(\.d)?.(ts|js)$/,
         },
         {
-          rule: 'equals',
-          value: 'test.ts',
+          rule: "equals",
+          value: "test.ts",
         },
         {
-          rule: 'equals',
-          value: 'test.js',
+          rule: "equals",
+          value: "test.js",
         },
         {
-          rule: 'equals',
-          value: 'test.d.ts',
+          rule: "equals",
+          value: "test.d.ts",
+        },
+        {
+          rule: "equals",
+          value: "types.js",
         },
       ]);
     } catch (err) {
-      if(err?.code !== 'ENOENT') {
+      if(err?.code !== "ENOENT") {
         throw err;
       }
     }
 
-    if(existsSync(MD_PATH)) {
-      await copyFile(MD_PATH, path.join(DEST_PATH, 'README.md'));
+    if( existsSync(MD_PATH) ) {
+      await copyFile(MD_PATH, path.join(DEST_PATH, "README.md"));
+    }
+
+    if( existsSync(path.join(process.cwd(), "package.json")) ) {
+      const rawBuf = await readFile(path.join(process.cwd(), "package.json"));
+      const pkgObject = JSON.parse(rawBuf.toString("utf8"));
+
+      delete pkgObject["devDependencies"];
+      delete pkgObject["scripts"];
+
+      await writeFile(
+        path.join(DEST_PATH, "package.json"),
+        JSON.stringify(pkgObject, null, 2),
+        "utf8",
+      );
     }
   }
 })();
@@ -94,7 +134,7 @@ async function rmfl(p, dif = null) {
     const base = path.basename(p);
 
     for(const { rule, value } of dif) {
-      if(rule === 'pattern') {
+      if(rule === "pattern") {
         if(value.test(base)) {
           await unlink(p);
         }
@@ -102,7 +142,7 @@ async function rmfl(p, dif = null) {
         continue;
       }
 
-      if(rule === 'equals') {
+      if(rule === "equals") {
         if(value === base) {
           await unlink(p);
         }

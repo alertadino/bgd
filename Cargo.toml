@@ -1,0 +1,11 @@
+[package]
+name = "dbgd-bindings"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "dbgdr"
+path = "rust/lib.rs"
+crate-type = ["staticlib"]
+
+[dependencies]
