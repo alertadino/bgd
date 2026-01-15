@@ -13,7 +13,9 @@
 
 import { type ImplicitArrayBuffer, type WithImplicitCoercion } from "node:buffer";
 
+import { assert } from "../util";
 import { BGDException } from "../errors";
+import { IDebugString } from "../lifecycle/debugger";
 import { IDisposable } from "../lifecycle/disposable";
 
 
@@ -21,7 +23,9 @@ import { IDisposable } from "../lifecycle/disposable";
  * Provides a scoped wrapper around Node `Buffer` with
  * explicit zeroization and access checks.
  */
-export class MemoryBuffer<T extends ArrayBuffer | SharedArrayBuffer = ArrayBufferLike> implements IDisposable {
+export class MemoryBuffer<
+  T extends ArrayBuffer | SharedArrayBuffer = ArrayBufferLike
+> implements IDisposable, IDebugString {
 
   /**
    * Allocates a new zero-filled `Buffer` in heap.
@@ -32,12 +36,22 @@ export class MemoryBuffer<T extends ArrayBuffer | SharedArrayBuffer = ArrayBuffe
 
   /**
    * Using `from()` method may allocate a oversized buffer.
+   * 
+   * It also can share memory with an external resource when
+   * called with `ArrayBuffer` instance, invalidating disposal logic.
+   * 
+   * @advice
    * Prefer to use`alloc()` with specific needed memory size.
    */
   public static from(string: WithImplicitCoercion<string>, encoding?: BufferEncoding): MemoryBuffer<ArrayBuffer>;
 
   /**
    * Using `from()` method may allocate a oversized buffer.
+   * 
+   * It also can share memory with an external resource when
+   * called with `ArrayBuffer` instance, invalidating disposal logic.
+   * 
+   * @advice
    * Prefer to use`alloc()` with specific needed memory size.
    */
   public static from(arrayOrString: WithImplicitCoercion<ArrayLike<number> | string>): MemoryBuffer<ArrayBuffer>;
@@ -78,6 +92,7 @@ export class MemoryBuffer<T extends ArrayBuffer | SharedArrayBuffer = ArrayBuffe
       );
     }
 
+    assert(buf.byteLength === buf.length, "[MemoryBuffer] bytes-per-element=1");
     this.#BufRef = buf;
   }
 
@@ -520,6 +535,22 @@ export class MemoryBuffer<T extends ArrayBuffer | SharedArrayBuffer = ArrayBuffe
     return this;
   }
 
+  public toReversed(): MemoryBuffer<ArrayBuffer> {
+    this.#CheckDisposed();
+
+    let buf = this.#BufRef!.toReversed();
+    const res = MemoryBuffer.alloc(buf.byteLength);
+
+    for(let i = 0; i < buf.length; ++i) {
+      res.setByte(i, buf[i]);
+    }
+
+    buf.fill(0);
+    buf = null!;
+
+    return res;
+  }
+
   public subarray(start?: number, end?: number): MemoryBuffer<T> {
     this.#CheckDisposed();
     return new MemoryBuffer( this.#BufRef!.subarray(start, end) );
@@ -528,6 +559,58 @@ export class MemoryBuffer<T extends ArrayBuffer | SharedArrayBuffer = ArrayBuffe
   public toString(enc?: BufferEncoding, start?: number, end?: number): string {
     this.#CheckDisposed();
     return this.#BufRef!.toString(enc, start, end);
+  }
+
+  /**
+   * **ATTENTION:** If you use this function make sure that
+   * will not create an external reference of the buffer, or it'll
+   * invalidate the disposal logic resulting in a memory leak.
+   */
+  public valueOf(secure?: true): Buffer;
+
+  /**
+   * **ATTENTION:** If you use this function make sure that
+   * will not create an external reference of the buffer, or it'll
+   * invalidate the disposal logic resulting in a memory leak.
+   */
+  public valueOf(secure: false): Buffer | null;
+  
+  public valueOf(secure?: boolean): Buffer | null {
+    if(this.#BufRef == null) {
+      if(secure !== false) {
+        this.#CheckDisposed();
+      }
+
+      return null;
+    }
+
+    return this.#BufRef;
+  }
+
+  /**
+   * **ATTENTION:** If you use this function make sure that
+   * will not create an external reference of the buffer, or it'll
+   * invalidate the disposal logic resulting in a memory leak.
+   */
+  public $ref(secure?: true): T;
+
+  /**
+   * **ATTENTION:** If you use this function make sure that
+   * will not create an external reference of the buffer, or it'll
+   * invalidate the disposal logic resulting in a memory leak.
+   */
+  public $ref(secure: false): T | null;
+  
+  public $ref(secure?: boolean): T | null {
+    if(this.#BufRef == null) {
+      if(secure !== false) {
+        this.#CheckDisposed();
+      }
+
+      return null;
+    }
+
+    return this.#BufRef.buffer;
   }
 
   /**
@@ -543,6 +626,41 @@ export class MemoryBuffer<T extends ArrayBuffer | SharedArrayBuffer = ArrayBuffe
       this.#BufRef.fill(0);
       this.#BufRef = null;
     }
+  }
+
+  public $$debug(r?: true): string;
+  public $$debug(r: false): void;
+  public $$debug(r?: boolean): string | void {
+    let msg: string = "";
+
+    if(this.#BufRef == null) {
+      msg = "Buffer (__disposed__)";
+    } else {
+      msg = `Buffer (${this.#BufRef?.byteLength}) `;
+      msg += `[ims=0xFF arraybuffer_size=${this.#BufRef.buffer.byteLength}]`;
+
+      if(this.#BufRef.byteLength >= 4) {
+        const left = [this.#BufRef[0].toString(16), this.#BufRef[1].toString(16)];
+        const right = [this.#BufRef.at(-2)?.toString(16), this.#BufRef.at(-1)?.toString(16)];
+
+        let moreInfo: string = "";
+
+        if(this.#BufRef.byteLength > 4) {
+          moreInfo = `... more ${this.#BufRef.byteLength - 4} bytes ... `;
+        }
+
+        msg += ` { ${left.map(i => `0x${i}`.toUpperCase()).join(", ")} ${moreInfo}${right.map(i => `0x${i}`.toUpperCase()).join(", ")} }`;
+      } else {
+        msg += ` { ${Array.from(this.#BufRef).map(i => `0x${i.toString(16).toUpperCase()}`).join(", ")} }`;
+      }
+    }
+
+    if(r === false) {
+      console.log(msg);
+      return;
+    }
+
+    return msg;
   }
 
   #CheckDisposed(): void {

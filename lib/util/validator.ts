@@ -82,3 +82,32 @@ export function assertType(
     );
   }
 }
+
+
+export function assert(c: unknown, message?: string): asserts c {
+  let isValid = false;
+
+  switch(typeof c) {
+    case "string": {
+      isValid = c.trim().length > 0;
+    } break;
+
+    case "boolean": {
+      isValid = c;
+    } break;
+
+    case "number": {
+      isValid = !isNaN(c);
+    } break;
+
+    default:
+      isValid = !!c;
+  }
+
+  if(!isValid) {
+    throw new BGDException(
+      message?.trim() || `[@@assert] Assertation failed for 'typeof ${typeof c}'`,
+      "ER_ASSERTATION_FAILED" // eslint-disable-line comma-dangle
+    );
+  }
+}

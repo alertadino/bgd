@@ -11,5 +11,24 @@
  */
 
 
+/** Represents a struct (object with string keys) */
+export type Dict<T> = {
+  [key: string]: T;
+};
+
+export type BufferLike =
+  | Buffer
+  | string
+  | ArrayBuffer
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array
+  | SharedArrayBuffer
+  | ArrayBufferView
+  | DataView
+  | readonly number[];
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type GenericFunction = (...args: any[]) => unknown;
+
+export type MaybePromise<T> = T | Promise<T>;

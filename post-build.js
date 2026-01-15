@@ -34,17 +34,18 @@ const MD_PATH = path.join(process.cwd(), "..", "README.md");
 
 
 (async function() {
-  if(!existsSync(DEST_PATH)) {
+  if( !existsSync(DEST_PATH) ) {
     throw new Error("Missing output directory for node.js' files");
   }
 
-  if(!existsSync(SRC_PATH)) {
+  if( !existsSync(SRC_PATH) ) {
     throw new Error("Missing source directory for node.js' files");
   }
 
-  if(process.env.NODE_ENV === "production") {
+  if( process.env.NODE_ENV === "production" ) {
     try {
       await rimraf(path.join(DEST_PATH, "test"));
+      await rimraf(path.join(DEST_PATH, "__unsafe"));
 
       await rmfl(DEST_PATH, [
         {
@@ -63,10 +64,6 @@ const MD_PATH = path.join(process.cwd(), "..", "README.md");
           rule: "equals",
           value: "test.d.ts",
         },
-        {
-          rule: "equals",
-          value: "types.js",
-        },
       ]);
     } catch (err) {
       if(err?.code !== "ENOENT") {
@@ -84,6 +81,8 @@ const MD_PATH = path.join(process.cwd(), "..", "README.md");
 
       delete pkgObject["devDependencies"];
       delete pkgObject["scripts"];
+
+      pkgObject.main = "index.js";
 
       await writeFile(
         path.join(DEST_PATH, "package.json"),

@@ -11,6 +11,12 @@
  */
 
 
-export function toInt(n: number): number {
-  return ~~n;
+import type { Dict } from "../types";
+
+
+export interface INode<P extends Dict<unknown> = Dict<unknown>> {
+  readonly __brandName: string;
+  readonly nodeId: string;
+  readonly sequence: number;
+  readonly properties: P;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@ad-sdk/bgd",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "main": "dist/index.js",
   "license": "BSD-3-Clause",
   "repository": {
@@ -30,6 +30,7 @@
     "@babel/preset-typescript": "^7.27.1",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.21",
+    "@types/pg": "^8.16.0",
     "@typescript-eslint/eslint-plugin": "7.8.0",
     "@typescript-eslint/parser": "7.8.0",
     "babel-plugin-module-resolver": "^5.0.2",
@@ -38,6 +39,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "pg": "^8.16.3",
     "uidlib": "^0.0.1"
   }
 }

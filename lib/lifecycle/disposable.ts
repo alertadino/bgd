@@ -15,6 +15,10 @@ export interface IDisposable {
   dispose(): void;
 }
 
+export interface IAsyncDisposable {
+  dispose(): Promise<void>;
+}
+
 
 export class Disposable implements IDisposable {
   public static readonly None: IDisposable = Object.freeze({ dispose() {} });

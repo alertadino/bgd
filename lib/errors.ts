@@ -18,6 +18,7 @@ enum K_INTERNAL_BGD_ERRNO_MAP {
   ER_NOT_IMPLEMENTED = 12,
   ER_ASSERTATION_FAILED = 13,
   ER_BUFFER_OVERFLOW = 14,
+  ER_IO_FAIL = 15,
 }
 
 const recvErrno = new Set<number>([]);
